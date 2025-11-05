@@ -38,6 +38,12 @@ pipeline {
     }
   }
 
+  stage('Deploy image'){
+    steps{
+      sh 'docker run -d -p 8081:80 $IMAGE_NAME:$IMAGE_TAG'
+    }
+  }
+
   post {
     always {
       echo "✅ Image pushed: $IMAGE_NAME:$IMAGE_TAG"
