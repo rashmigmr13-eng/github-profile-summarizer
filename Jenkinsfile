@@ -4,6 +4,7 @@ pipeline {
   environment {
     IMAGE_NAME = "theshubhamgour/github-profile-summarizer"
     IMAGE_TAG = "v${env.BUILD_NUMBER}"
+    MAX_REPOS = "50"
   }
 
   stages {
@@ -22,14 +23,14 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        // Securely retrieve the GitHub Token from Jenkins Credentials
-        // REPLACE 'github-token-secret' with your actual Jenkins Credential ID
-        withCredentials([string(credentialsId: 'github-gpg', variable: 'GITHUB_TOKEN_VALUE')]) {
+        // SECURELY retrieve the GitHub Token from Jenkins Credentials
+        // Make sure you have a Secret Text credential with ID 'github-token-secret'
+        withCredentials([string(credentialsId: 'github-token-secret', variable: 'GITHUB_TOKEN_VALUE')]) {
           
           // Pass the token to the Docker build command using --build-arg
           sh "docker build \
             --build-arg VITE_GITHUB_TOKEN=${GITHUB_TOKEN_VALUE} \
-            --build-arg VITE_MAX_REPOS=50 \
+            --build-arg VITE_MAX_REPOS=${MAX_REPOS} \
             -t ${IMAGE_NAME}:${IMAGE_TAG} ."
         }
       }
@@ -49,8 +50,6 @@ pipeline {
 
   stage('Deploy image'){
     steps{
-      // This step assumes you are running this on the EC2 instance itself.
-      // You may need to adjust the port (8081:80) and add a stop/remove for the old container.
       sh 'docker run -d -p 8081:80 $IMAGE_NAME:$IMAGE_TAG'
     }
    }
